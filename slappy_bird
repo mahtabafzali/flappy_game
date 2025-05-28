@@ -1,0 +1,86 @@
+import pygame  # Import the pygame library for game development
+import random  # Import random for generating random pipe heights
+
+pygame.init()  # Initialize all pygame modules
+
+# Set up the game window
+width, height = 400, 600
+screen = pygame.display.set_mode((width, height))  # Create game window
+
+pygame.display.set_caption("Flappy Bird")  # Set window title
+
+# Load background image and sounds
+background = pygame.image.load("background.png")  # Background image
+jump_sound = pygame.mixer.Sound("jump.wav")       # Sound when bird jumps
+game_over_sound = pygame.mixer.Sound("gameover.wav")  # Sound for game over
+
+# Clock to control frame rate
+clock = pygame.time.Clock()
+
+# Bird properties
+bird_x = 50
+bird_y = 300
+bird_size = 30
+gravity = 0.5
+bird_velocity = 0
+
+# Pipe properties
+pipe_width = 60
+pipe_gap = 150
+pipe_x = width
+pipe_height = random.randint(100, 400)
+
+# Score tracking
+score = 0
+font = pygame.font.Font(None, 36)
+
+# Main game loop flag
+running = True
+
+while running:
+    clock.tick(60)  # 60 frames per second
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False  # Exit game
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                bird_velocity = -10  # Make bird jump
+                jump_sound.play()
+
+    bird_velocity += gravity  # Apply gravity to bird
+    bird_y += bird_velocity   # Update bird position
+
+    pipe_x -= 5  # Move pipe to the left
+
+    if pipe_x + pipe_width < 0:  # If pipe goes off screen
+        pipe_x = width
+        pipe_height = random.randint(100, 400)
+        score += 1  # Increase score
+
+    # Collision detection
+    if (
+        bird_y < 0 or bird_y + bird_size > height or
+        (bird_x + bird_size > pipe_x and bird_x < pipe_x + pipe_width and
+         (bird_y < pipe_height or bird_y + bird_size > pipe_height + pipe_gap))):
+        game_over_sound.play()
+        running = False  # End game if bird hits something
+
+    # Draw everything on the screen
+    screen.blit(background, (0, 0))  # Draw background
+
+    # Draw the bird as a yellow square
+    pygame.draw.rect(screen, (255, 255, 0), (bird_x, bird_y, bird_size, bird_size))
+
+    # Draw the pipes
+    pygame.draw.rect(screen, (0, 255, 0), (pipe_x, 0, pipe_width, pipe_height))  # Top pipe
+    pygame.draw.rect(screen, (0, 255, 0), (pipe_x, pipe_height + pipe_gap, pipe_width, height))  # Bottom pipe
+
+    # Display the score
+    score_text = font.render("Score: " + str(score), True, (0, 0, 0))
+    screen.blit(score_text, (10, 10))
+
+    pygame.display.update()  # Update the display
+
+# End of game
+pygame.quit()
